@@ -47,7 +47,7 @@ async def add_document(doc: Document):
     return {"id": doc_id}
 
 @app.post("/add_documents")
-async def add_document(docs: list[Document]):
+async def add_documents(docs: list[Document]):
     with psycopg.connect(POSTGRES_CONNECTION_STRING) as conn:
         with conn.cursor() as cur:
             cur.executemany(
@@ -80,7 +80,7 @@ async def add_document(docs: list[Document]):
     return {"ids": doc_ids}
 
 @app.get("/similar_to/{body}")
-async def add_document(body: str):
+async def similar_to(body: str):
     vector = MODEL.encode(body).tolist()
     hits = QDRANT_CLIENT.search(
         collection_name="all_documents",
