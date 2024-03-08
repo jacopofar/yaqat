@@ -1,0 +1,11 @@
+# .env with secrets and local parameters
+.env
+# qdrant data
+qdrant_data/
+# postgres data
+postgres_data/
+# sbert models
+sbert_data/
+
+# virtualenvs
+document_storage/.venv
