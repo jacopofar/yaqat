@@ -11,7 +11,6 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     filename = 'wikitxt.csv'
-
     with open(filename, 'r') as file:
         pending = []
         total_ingested = 0
@@ -20,7 +19,7 @@ if __name__ == '__main__':
             if len(line) < 100:
                 continue
             # remove whitespace and surrounding quotes
-            line = line.strip().strip('"')
+            line = line.strip().strip('"').strip()
             pending.append(dict(
                 body=line,
                 source=f'Line {idx} of file {filename}',

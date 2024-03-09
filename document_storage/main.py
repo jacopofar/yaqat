@@ -6,14 +6,25 @@ import psycopg
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
 from sentence_transformers import SentenceTransformer
+from sonic import IngestClient, SearchClient
 
 POSTGRES_CONNECTION_STRING = environ["POSTGRES_CONNECTION_STRING"]
-QDRANT_CONNECTION_STRING = environ["QDRANT_CONNECTION_STRING"]
 
-# NOTE that the SENTENCE_TRANSFORMERS_HOME will specify where to store it
-# using Docker, this should be some mounted volume
-MODEL = SentenceTransformer("distiluse-base-multilingual-cased-v1")
-QDRANT_CLIENT = QdrantClient(url=QDRANT_CONNECTION_STRING)
+INDEX_MODE = environ["INDEX_MODE"]
+
+if INDEX_MODE == "SONIC":
+    SONIC_HOST = environ["SONIC_HOST"]
+    SONIC_PORT = int(environ["SONIC_PORT"])
+    SONIC_PASSWORD = environ["SONIC_PASSWORD"]
+elif INDEX_MODE == "QDRANT":
+    # NOTE that the SENTENCE_TRANSFORMERS_HOME will specify where to store it
+    # using Docker, this should be some mounted volume
+    MODEL = SentenceTransformer("distiluse-base-multilingual-cased-v1")
+    QDRANT_CONNECTION_STRING = environ["QDRANT_CONNECTION_STRING"]
+    QDRANT_CLIENT = QdrantClient(url=QDRANT_CONNECTION_STRING)
+else:
+    raise ValueError(f"Unknown INDEX_MODE: {INDEX_MODE}")
+
 
 app = FastAPI()
 
@@ -34,16 +45,20 @@ async def add_document(doc: Document):
             )
             doc_id = cur.fetchone()[0]
             conn.commit()
-    QDRANT_CLIENT.upsert(
-        collection_name="all_documents",
-        points=[
-             PointStruct(
-                id=doc_id,
-                vector=MODEL.encode(doc.body).tolist(),
-                payload={"id": doc_id}
-            )
-        ],
-    )
+    if INDEX_MODE == "SONIC":
+        with IngestClient(SONIC_HOST, SONIC_PORT, SONIC_PASSWORD) as ingestcl:
+            ingestcl.push("all_documents", "paragraph", f"{doc_id}", doc.body)
+    elif INDEX_MODE == "QDRANT":
+        QDRANT_CLIENT.upsert(
+            collection_name="all_documents",
+            points=[
+                PointStruct(
+                    id=doc_id,
+                    vector=MODEL.encode(doc.body).tolist(),
+                    payload={"id": doc_id}
+                )
+            ],
+        )
     return {"id": doc_id}
 
 @app.post("/add_documents")
@@ -66,27 +81,36 @@ async def add_documents(docs: list[Document]):
                 if not cur.nextset():
                     break
             conn.commit()
-    QDRANT_CLIENT.upsert(
-        collection_name="all_documents",
-        points=[
-             PointStruct(
-                id=doc_id,
-                vector=MODEL.encode(doc.body).tolist(),
-                payload={"id": doc_id}
-            )
-            for doc_id, doc in zip(doc_ids, docs)
-        ],
-    )
+    if INDEX_MODE == "SONIC":
+        with IngestClient(SONIC_HOST, SONIC_PORT, SONIC_PASSWORD) as ingestcl:
+            for doc_id, doc in zip(doc_ids, docs):
+                ingestcl.push("all_documents", "paragraph", f"{doc_id}", doc.body)
+    elif INDEX_MODE == "QDRANT":
+        QDRANT_CLIENT.upsert(
+            collection_name="all_documents",
+            points=[
+                PointStruct(
+                    id=doc_id,
+                    vector=MODEL.encode(doc.body).tolist(),
+                    payload={"id": doc_id}
+                )
+                for doc_id, doc in zip(doc_ids, docs)
+            ],
+        )
     return {"ids": doc_ids}
 
 @app.get("/similar_to/{body}")
 async def similar_to(body: str):
-    vector = MODEL.encode(body).tolist()
-    hits = QDRANT_CLIENT.search(
-        collection_name="all_documents",
-        query_vector=vector,
-        limit=5
-    )
+    if INDEX_MODE == "SONIC":
+        with SearchClient(SONIC_HOST, SONIC_PORT, SONIC_PASSWORD) as querycl:
+            hits = querycl.query("all_documents", "paragraph", body)
+    elif INDEX_MODE == "QDRANT":
+        vector = MODEL.encode(body).tolist()
+        hits = QDRANT_CLIENT.search(
+            collection_name="all_documents",
+            query_vector=vector,
+            limit=5
+        )
     print(hits)
     result = []
     with psycopg.connect(POSTGRES_CONNECTION_STRING) as conn:

@@ -13,6 +13,13 @@ services:
       - "6333:6333"
     volumes:
      - ./qdrant_data:/qdrant/storage:z
+  sonic:
+    image: valeriansaliou/sonic:v1.4.8
+    ports:
+      - "1491:1491"
+    volumes:
+      - ./sonic_data:/var/lib/sonic/store:z
+      - ./sonic_config.cfg:/etc/sonic.cfg:ro
   document_storage:
     build: document_storage
     environment:
