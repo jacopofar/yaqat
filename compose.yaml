@@ -13,3 +13,12 @@ services:
       - "6333:6333"
     volumes:
      - ./qdrant_data:/qdrant/storage:z
+  document_storage:
+    build: document_storage
+    environment:
+      - POSTGRES_CONNECTION_STRING=postgresql://postgres:secretpassword@postgres:15432/postgres
+      - QDRANT_CONNECTION_STRING=http://qdrant:6333
+
+    depends_on:
+      - postgres
+      - qdrant
