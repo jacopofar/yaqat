@@ -1,9 +1,13 @@
 # YAQAT - yet Anothr Question Answering Tool
 
-Simple RAG tool.
+Simple RAG tool experiment.
 
 ## Setup
-Use `docker compose up` to start the services, the first time you will also need to run `initial_setup.sh` to download the Ollama model and create the DB schema
+Use `docker compose up` to start the services, the first time you will also need to run `initial_setup.sh` to download the Ollama model and create the DB schema.
+
+## Usage
+
+No UI at the moment, visit http://localhost:8000/docs to store documents, and http://localhost:8090/docs for the QA component.
 
 ## Components (planned)
 

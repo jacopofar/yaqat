@@ -42,3 +42,13 @@ services:
       - "11434:11434"
     volumes:
      - ./ollama_data:/root/.ollama
+  qa:
+    build: qa
+    ports:
+      - "8090:8090"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - DOCUMENT_STORAGE_URL=http://document_storage:8000
+    depends_on:
+      - ollama
+      - document_storage
