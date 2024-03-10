@@ -107,17 +107,17 @@ async def add_documents(docs: list[Document]):
         )
     return {"ids": doc_ids}
 
-@app.get("/similar_to/{body}")
-async def similar_to(body: str):
+@app.get("/similar_to/{text}")
+async def similar_to(text: str, limit: int = 10):
     if INDEX_MODE == "SONIC":
         with SearchClient(SONIC_HOST, SONIC_PORT, SONIC_PASSWORD) as querycl:
-            hits = querycl.query("all_documents", "paragraph", body)
+            hits = querycl.query("all_documents", "paragraph", text)
     elif INDEX_MODE == "QDRANT":
-        vector = MODEL.encode(body).tolist()
+        vector = MODEL.encode(text).tolist()
         hits = QDRANT_CLIENT.search(
             collection_name="all_documents",
             query_vector=vector,
-            limit=10,
+            limit=limit,
         )
     logger.debug(hits)
     result = []
