@@ -6,6 +6,8 @@ qdrant_data/
 postgres_data/
 # sbert models
 sbert_data/
+# ollama models
+ollama_data/
 
 # virtualenvs
 document_storage/.venv
