@@ -17,3 +17,11 @@ No UI at the moment, visit http://localhost:8000/docs to store documents, and ht
 * crawler: ingest documents (sending them to the docstore) from the web or other sources, uses the task queue to handle the volume
 * Ollama: vanilla Ollama server, used to form a single textual reply from the retrieved documents. May use llama2 or
 * QA: uses the docstore and ollama to retrieve relevant documents and form a single textual answer. Includes a web interface to show the stuff nicely and also the crawler status and the insertion of new documents.
+
+## TODO, ideas
+
+- [ ] Implement Hyde
+- [ ] Try full text search or FTS/vector hybrids
+- [ ] Improve ways to chunk documents (sentences, paragraphs, etc)
+- [ ] Add thresholds on retrieval to not fetch more than needed
+- [ ] Use "tools" (JSON calls) to make the process iterative
