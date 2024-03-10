@@ -10,7 +10,7 @@ logging.basicConfig(
 if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
-    filename = 'wikitxt.csv'
+    filename = 'eng_dist_bodies.csv'
     with open(filename, 'r') as file:
         pending = []
         total_ingested = 0

@@ -1,4 +1,5 @@
 from os import environ
+import logging
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -7,6 +8,13 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
 from sentence_transformers import SentenceTransformer
 from sonic import IngestClient, SearchClient
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+logger.info("Starting document storage service...")
 
 POSTGRES_CONNECTION_STRING = environ["POSTGRES_CONNECTION_STRING"]
 
@@ -109,9 +117,9 @@ async def similar_to(body: str):
         hits = QDRANT_CLIENT.search(
             collection_name="all_documents",
             query_vector=vector,
-            limit=5
+            limit=10,
         )
-    print(hits)
+    logger.debug(hits)
     result = []
     with psycopg.connect(POSTGRES_CONNECTION_STRING) as conn:
         for hit in hits:

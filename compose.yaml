@@ -13,19 +13,26 @@ services:
       - "6333:6333"
     volumes:
      - ./qdrant_data:/qdrant/storage:z
-  sonic:
-    image: valeriansaliou/sonic:v1.4.8
-    ports:
-      - "1491:1491"
-    volumes:
-      - ./sonic_data:/var/lib/sonic/store:z
-      - ./sonic_config.cfg:/etc/sonic.cfg:ro
+  # NOTE: not used rigt now, but supported in the code
+  # sonic:
+  #   image: valeriansaliou/sonic:v1.4.8
+  #   ports:
+  #     - "1491:1491"
+  #   volumes:
+  #     - ./sonic_data:/var/lib/sonic/store:z
+  #     - ./sonic_config.cfg:/etc/sonic.cfg:ro
   document_storage:
     build: document_storage
+    ports:
+      - "8000:8000"
+    volumes:
+     - ./sbert_data:/sbert_data:z
     environment:
-      - POSTGRES_CONNECTION_STRING=postgresql://postgres:secretpassword@postgres:15432/postgres
+      - POSTGRES_CONNECTION_STRING=postgresql://postgres:secretpassword@postgres:5432/postgres
       - QDRANT_CONNECTION_STRING=http://qdrant:6333
-
+      - INDEX_MODE=QDRANT
+      - SENTENCE_TRANSFORMERS_HOME=/app/sbert_data
     depends_on:
       - postgres
       - qdrant
+      # - sonic
