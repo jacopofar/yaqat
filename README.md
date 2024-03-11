@@ -1,4 +1,4 @@
-# YAQAT - yet Anothr Question Answering Tool
+# YAQAT - Yet Another Question Answering Tool
 
 Simple RAG tool experiment.
 
